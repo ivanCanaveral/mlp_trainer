@@ -1,5 +1,6 @@
 import tensorflow as tf
 from tensorflow.examples.tutorials.mnist import input_data
+from datetime import datetime
 
 n_vars = 28 * 28
 n_layer1 = 300
@@ -9,6 +10,10 @@ learning_rate = 0.01
 
 n_epochs = 40
 batch_size = 50
+
+now = datetime.utcnow().strftime("%Y%m%d%H%M%S")
+root_logdir = "tf_logs"
+logdir = "{}/run-{}/".format(root_logdir, now)
 
 X = tf.placeholder(tf.float32, shape=(None, n_vars), name='X')
 y = tf.placeholder(tf.int32, shape=(None), name='y')
@@ -47,6 +52,10 @@ with tf.name_scope("utils"):
     init = tf.global_variables_initializer()
     saver = tf.train.Saver()
 
+with tf.name_scope("board"):
+    acc_summary = tf.summary.scalar('accuracy', accuracy)
+    file_writer = tf.summary.FileWriter(logdir, tf.get_default_graph())
+
 if __name__ == '__main__':
     mnist = input_data.read_data_sets("/tmp/data/")
 
@@ -57,9 +66,14 @@ if __name__ == '__main__':
                 X_batch, y_batch = mnist.train.next_batch(batch_size)
                 sess.run(training_op, feed_dict={X: X_batch, y: y_batch})
             acc_train = accuracy.eval(feed_dict={X: X_batch, y: y_batch})
+            print("[{}] accuracy: {}".format(epoch, acc_train))
+            acc_str = acc_summary.eval(feed_dict={X: X_batch, y: y_batch})
+            step = epoch * mnist.train.num_examples + batch_size
+            file_writer.add_summary(acc_str, step) 
             if epoch % 10 == 0:
                 last_check_point_path = saver.save(sess, './checkpoints/checkpoint_{}'.format(epoch))
                 print('Checkpoint created')
-            print("[{}] accuracy: {}".format(epoch, acc_train))
+        
+        file_writer.close()
         save_path = saver.save(sess, 'models/model.ckpt')
         print('Model saved at {}'.format(save_path))
