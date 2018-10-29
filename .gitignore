@@ -102,3 +102,11 @@ venv.bak/
 
 # mypy
 .mypy_cache/
+
+# Tensorflow stuff
+.index
+.meta
+
+# Proyect folders
+checkpoints/
+models/

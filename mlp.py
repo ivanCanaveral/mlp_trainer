@@ -57,5 +57,9 @@ if __name__ == '__main__':
                 X_batch, y_batch = mnist.train.next_batch(batch_size)
                 sess.run(training_op, feed_dict={X: X_batch, y: y_batch})
             acc_train = accuracy.eval(feed_dict={X: X_batch, y: y_batch})
-
+            if epoch % 10 == 0:
+                last_check_point_path = saver.save(sess, './checkpoints/checkpoint_{}'.format(epoch))
+                print('Checkpoint created')
             print("[{}] accuracy: {}".format(epoch, acc_train))
+        save_path = saver.save(sess, 'models/model.ckpt')
+        print('Model saved at {}'.format(save_path))
